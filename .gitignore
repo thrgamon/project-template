@@ -1,0 +1,21 @@
+# Environment
+mise.local.toml
+
+# Go
+bin/
+tmp/
+coverage.out
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store

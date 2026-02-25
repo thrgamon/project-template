@@ -1,0 +1,18 @@
+[tools]
+go = "1.24"
+node = "20"
+
+[env]
+# Database
+POSTGRES_DB = "myapp"
+POSTGRES_USER = "postgres"
+POSTGRES_PASSWORD = "postgres"
+DATABASE_URL = "postgres://postgres:postgres@localhost:5432/myapp?sslmode=disable"
+
+# Application
+PORT = "8080"
+ENVIRONMENT = "development"
+
+# Auth
+COOKIE_SECURE = "false"
+SESSION_MAX_AGE = "604800"
