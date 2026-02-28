@@ -4,9 +4,19 @@ export default {
 		output: {
 			target: 'src/lib/api/generated/client.ts',
 			schemas: 'src/lib/api/generated/models',
-			client: 'fetch',
+			client: 'react-query',
 			mode: 'tags-split',
-			mock: true
-		}
-	}
+			mock: {
+				type: 'msw',
+				delay: false,
+			},
+			override: {
+				mutator: {
+					path: 'src/lib/api/mutator/custom-fetch.ts',
+					name: 'customFetch',
+				},
+			},
+			biome: true,
+		},
+	},
 };

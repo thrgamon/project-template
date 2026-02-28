@@ -10,13 +10,37 @@ import (
 	"github.com/thrgamon/project-template/internal/domain"
 )
 
+type HandlerConfig struct {
+	Auth *auth.Service
+	Cfg  config.Config
+}
+
 type Handler struct {
 	auth *auth.Service
 	cfg  config.Config
 }
 
-func NewHandler(authSvc *auth.Service, cfg config.Config) *Handler {
-	return &Handler{auth: authSvc, cfg: cfg}
+func NewHandler(cfg HandlerConfig) *Handler {
+	return &Handler{auth: cfg.Auth, cfg: cfg.Cfg}
+}
+
+// Routes registers all HTTP routes on the given router group.
+func (h *Handler) Routes(rg *gin.RouterGroup) {
+	rg.GET("/health", h.Health)
+
+	authGroup := rg.Group("/auth")
+	{
+		authGroup.POST("/register", h.Register)
+		authGroup.POST("/login", h.Login)
+		authGroup.POST("/logout", h.Logout)
+		authGroup.GET("/me", auth.RequireAuth(h.auth), h.Me)
+	}
+
+	protected := rg.Group("")
+	protected.Use(auth.RequireAuth(h.auth))
+	{
+		protected.GET("/dashboard", h.Dashboard)
+	}
 }
 
 // Health godoc

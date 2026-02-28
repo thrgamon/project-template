@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+echo "=== Pre-push checks ==="
+
+# Check for duplicate migration version numbers
+echo "Checking for duplicate migration versions..."
+versions=$(ls migrations/*.sql 2>/dev/null | sed 's/.*\///' | cut -d'_' -f1 | sort)
+dupes=$(echo "$versions" | uniq -d)
+if [ -n "$dupes" ]; then
+    echo "ERROR: Duplicate migration version numbers found: $dupes"
+    exit 1
+fi
+
+# Go checks
+echo "Running go fix..."
+go fix ./...
+
+echo "Running golangci-lint..."
+golangci-lint run ./...
+
+echo "Running go tests..."
+go test -race ./...
+
+# Frontend checks
+echo "Running TypeScript check..."
+npm run check
+
+echo "Running Biome lint..."
+npm run lint
+
+# Sync check
+echo "Running sync check..."
+just sync
+if [ -n "$(git diff --name-only)" ]; then
+    echo "ERROR: Generated code is out of date. Run 'just sync' and commit the changes."
+    exit 1
+fi
+
+echo "=== All checks passed ==="

@@ -20,6 +20,11 @@ import (
 	"github.com/thrgamon/project-template/internal/server"
 )
 
+// @title My App API
+// @version 1.0
+// @host localhost:8080
+// @BasePath /api
+
 func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
@@ -43,12 +48,14 @@ func main() {
 
 	queries := db.New(pool)
 	authSvc := auth.NewService(queries, cfg)
-	handler := api.NewHandler(authSvc, cfg)
+	handler := api.NewHandler(api.HandlerConfig{
+		Auth: authSvc,
+		Cfg:  cfg,
+	})
 
 	srv := server.New(server.Options{
 		Config:  cfg,
 		Handler: handler,
-		Auth:    authSvc,
 	})
 
 	addr := fmt.Sprintf(":%d", cfg.Port)

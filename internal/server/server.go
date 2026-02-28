@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/thrgamon/project-template/internal/api"
-	"github.com/thrgamon/project-template/internal/auth"
 	"github.com/thrgamon/project-template/internal/config"
 	"github.com/thrgamon/project-template/internal/middleware"
 )
@@ -18,7 +17,6 @@ import (
 type Options struct {
 	Config  config.Config
 	Handler *api.Handler
-	Auth    *auth.Service
 }
 
 type Server struct {
@@ -46,7 +44,7 @@ func New(opts Options) *Server {
 	if opts.Config.Environment == "production" {
 		corsConfig.AllowAllOrigins = true
 	} else {
-		corsConfig.AllowOrigins = []string{"http://localhost:5173"}
+		corsConfig.AllowOrigins = []string{"http://localhost:3000"}
 	}
 	engine.Use(cors.New(corsConfig))
 	engine.Use(middleware.Logger())
@@ -78,21 +76,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 }
 
 func registerRoutes(router *gin.Engine, opts Options) {
-	h := opts.Handler
-
-	router.GET("/api/health", h.Health)
-
-	authGroup := router.Group("/api/auth")
-	{
-		authGroup.POST("/register", h.Register)
-		authGroup.POST("/login", h.Login)
-		authGroup.POST("/logout", h.Logout)
-		authGroup.GET("/me", auth.RequireAuth(opts.Auth), h.Me)
-	}
-
-	protected := router.Group("/api")
-	protected.Use(auth.RequireAuth(opts.Auth))
-	{
-		protected.GET("/dashboard", h.Dashboard)
-	}
+	apiGroup := router.Group("/api")
+	opts.Handler.Routes(apiGroup)
 }
