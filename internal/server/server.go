@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/thrgamon/project-template/internal/api"
 	"github.com/thrgamon/project-template/internal/config"
@@ -34,6 +35,7 @@ func New(opts Options) *Server {
 	}
 
 	engine := gin.New()
+	engine.Use(otelgin.Middleware("myapp"))
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.RequestID())
 

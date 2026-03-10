@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/thrgamon/project-template/internal/config"
 	"github.com/thrgamon/project-template/internal/db"
 	"github.com/thrgamon/project-template/internal/server"
+	"github.com/thrgamon/project-template/internal/telemetry"
 )
 
 // @title My App API
@@ -26,10 +26,16 @@ import (
 // @BasePath /api
 
 func main() {
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	// Telemetry (no-op if OTEL_EXPORTER_OTLP_ENDPOINT is unset)
+	logger, shutdownTelemetry, err := telemetry.Init(ctx, "myapp")
+	if err != nil {
+		log.Fatalf("initialize telemetry: %v", err)
+	}
+	defer func() { _ = shutdownTelemetry(context.Background()) }()
+	_ = logger // use logger instead of slog.Default() throughout
 
 	cfg := config.LoadConfig()
 
