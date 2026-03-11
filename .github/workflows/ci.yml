@@ -96,3 +96,12 @@ jobs:
             git diff --name-only
             exit 1
           fi
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [migrations, lint, test, check, sync]
+    uses: thrgamon/infra/.github/workflows/dokku-deploy.yml@main
+    with:
+      app_name: myapp  # Change to your Dokku app name
+    secrets:
+      DOKKU_SSH_KEY: ${{ secrets.DOKKU_SSH_KEY }}
