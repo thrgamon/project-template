@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test:*)",
+      "Bash(go vet:*)",
+      "Bash(just:*)",
+      "Bash(sqlc:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)"
+    ]
+  }
+}
