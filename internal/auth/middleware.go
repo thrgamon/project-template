@@ -4,35 +4,46 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/thrgamon/project-template/internal/domain"
 )
 
+// contextUserKey is the gin context key under which the authenticated user is
+// stored. Handlers should read it via GetUser rather than by name.
+const contextUserKey = "auth.user"
+
+// RequireAuth rejects requests without a valid session cookie and attaches the
+// authenticated user to the request context.
 func RequireAuth(svc *Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Cookie("session_token")
 		if err != nil || token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, domain.ErrorResponse{Error: "authentication required"})
 			return
 		}
 
 		session, err := svc.ValidateSession(c.Request.Context(), token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid session"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, domain.ErrorResponse{Error: "invalid session"})
 			return
 		}
 
-		c.Set("user_id", session.UserID)
-		c.Set("user_email", session.UserEmail)
+		c.Set(contextUserKey, domain.UserResponse{
+			ID:    session.UserID,
+			Email: session.UserEmail,
+		})
 		c.Next()
 	}
 }
 
-func GetUserID(c *gin.Context) (int32, bool) {
-	id, exists := c.Get("user_id")
+// GetUser returns the user attached by RequireAuth. The second return value is
+// false on any unauthenticated request, so callers never see a partially
+// populated user.
+func GetUser(c *gin.Context) (domain.UserResponse, bool) {
+	v, exists := c.Get(contextUserKey)
 	if !exists {
-		return 0, false
+		return domain.UserResponse{}, false
 	}
-	userID, ok := id.(int32)
-	return userID, ok
+	user, ok := v.(domain.UserResponse)
+	return user, ok
 }

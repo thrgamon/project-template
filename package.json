@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "check": "npx tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "biome check src",
     "lint:fix": "biome check --write src",
     "format": "biome format --write src"
@@ -16,7 +16,6 @@
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zod": "^3.23.0",
     "clsx": "^2.1.0",
     "tailwind-merge": "^3.0.0",
     "class-variance-authority": "^0.7.0",
@@ -30,8 +29,6 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "msw": "^2.0.0",
-    "orval": "^7.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.0.0"
   }

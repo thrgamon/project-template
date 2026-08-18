@@ -24,10 +24,10 @@ go test -race ./...
 
 # Frontend checks
 echo "Running TypeScript check..."
-npm run check
+yarn run check
 
 echo "Running Biome lint..."
-npm run lint
+yarn run lint
 
 # Sync check
 echo "Running sync check..."

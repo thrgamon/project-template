@@ -2,14 +2,30 @@
 
 ## After cloning this template for a new project
 
-- [ ] Update Go module path in all `.go` files and `go.mod`
+- [ ] Update Go module path in all `.go` files, `go.mod` and `tygo.yaml`
 - [ ] Update `mise.toml` with app-specific `POSTGRES_DB` and `DATABASE_URL`
 - [ ] Update `CLAUDE.md` with project-specific guidelines
-- [ ] Run `npm install` to generate `package-lock.json`
+- [ ] Run `yarn install` to generate `yarn.lock`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end
 - [ ] Install Go 1.25 via mise if not already available (`mise install go@1.25`)
 
 ## Dokku deployment setup
+
+Dokku selects the herokuish buildpack over the Dockerfile when a repo contains
+both `package.json` and Go files, so the builder must be set explicitly before
+the first push:
+
+```bash
+ssh dokku@<server> builder:set <appname> selected dockerfile
+ssh dokku@<server> builder-dockerfile:set <appname> dockerfile-path Dockerfile.dokku
+```
+
+Two things the Docker build assumes about the git tree:
+
+- Generated code (`internal/db/` from sqlc, `src/lib/api/types.ts` from tygo)
+  must be committed. The build does not run the generators.
+- Empty directories such as `public/` need a `.gitkeep`, or git will not track
+  them and they will be missing from the build context.
 
 - [ ] Create Dokku app on server: `dokku apps:create <appname>`
 - [ ] Create and link Postgres: `dokku postgres:create <appname>-db && dokku postgres:link <appname>-db <appname>`

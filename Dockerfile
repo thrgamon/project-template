@@ -1,6 +1,8 @@
 FROM golang:1.25-alpine AS build
 WORKDIR /src
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+# Keep in step with GOOSE_VERSION in the justfile.
+ARG GOOSE_VERSION=v3.27.3
+RUN go install github.com/pressly/goose/v3/cmd/goose@${GOOSE_VERSION}
 COPY go.mod go.sum ./
 RUN go mod download
 COPY cmd/ cmd/
