@@ -11,6 +11,22 @@
 
 ## Dokku deployment setup
 
+Dokku selects the herokuish buildpack over the Dockerfile when a repo contains
+both `package.json` and Go files, so the builder must be set explicitly before
+the first push:
+
+```bash
+ssh dokku@<server> builder:set <appname> selected dockerfile
+ssh dokku@<server> builder-dockerfile:set <appname> dockerfile-path Dockerfile.dokku
+```
+
+Two things the Docker build assumes about the git tree:
+
+- Generated code (`internal/db/` from sqlc, `src/lib/api/types.ts` from tygo)
+  must be committed. The build does not run the generators.
+- Empty directories such as `public/` need a `.gitkeep`, or git will not track
+  them and they will be missing from the build context.
+
 - [ ] Create Dokku app on server: `dokku apps:create <appname>`
 - [ ] Create and link Postgres: `dokku postgres:create <appname>-db && dokku postgres:link <appname>-db <appname>`
 - [ ] Set production config: `dokku config:set <appname> ENVIRONMENT=production COOKIE_SECURE=true COOKIE_DOMAIN=<domain>`
