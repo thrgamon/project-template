@@ -2,10 +2,10 @@
 
 ## After cloning this template for a new project
 
-- [ ] Update Go module path in all `.go` files and `go.mod`
+- [ ] Update Go module path in all `.go` files, `go.mod` and `tygo.yaml`
 - [ ] Update `mise.toml` with app-specific `POSTGRES_DB` and `DATABASE_URL`
 - [ ] Update `CLAUDE.md` with project-specific guidelines
-- [ ] Run `npm install` to generate `package-lock.json`
+- [ ] Run `yarn install` to generate `yarn.lock`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end
 - [ ] Install Go 1.25 via mise if not already available (`mise install go@1.25`)
 

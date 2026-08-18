@@ -43,35 +43,22 @@ func (h *Handler) Routes(rg *gin.RouterGroup) {
 	}
 }
 
-// Health godoc
-// @Summary Health check
-// @Tags health
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Router /api/health [get]
+// Health reports that the process is up and serving.
 func (h *Handler) Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	c.JSON(http.StatusOK, domain.HealthResponse{Status: "ok"})
 }
 
-// Register godoc
-// @Summary Register a new user
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param body body domain.RegisterRequest true "Registration details"
-// @Success 201 {object} domain.AuthResponse
-// @Failure 400 {object} map[string]string
-// @Router /api/auth/register [post]
+// Register creates a user and starts a session.
 func (h *Handler) Register(c *gin.Context) {
 	var req domain.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	resp, token, err := h.auth.Register(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -79,25 +66,17 @@ func (h *Handler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-// Login godoc
-// @Summary Login with email and password
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param body body domain.LoginRequest true "Login credentials"
-// @Success 200 {object} domain.AuthResponse
-// @Failure 401 {object} map[string]string
-// @Router /api/auth/login [post]
+// Login authenticates a user and starts a session.
 func (h *Handler) Login(c *gin.Context) {
 	var req domain.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	resp, token, err := h.auth.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -105,12 +84,7 @@ func (h *Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// Logout godoc
-// @Summary Logout current session
-// @Tags auth
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Router /api/auth/logout [post]
+// Logout ends the current session.
 func (h *Handler) Logout(c *gin.Context) {
 	token, err := c.Cookie("session_token")
 	if err == nil && token != "" {
@@ -118,42 +92,31 @@ func (h *Handler) Logout(c *gin.Context) {
 	}
 
 	h.clearSessionCookie(c)
-	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+	c.JSON(http.StatusOK, domain.MessageResponse{Message: "logged out"})
 }
 
-// Me godoc
-// @Summary Get current user
-// @Tags auth
-// @Produce json
-// @Success 200 {object} domain.UserResponse
-// @Failure 401 {object} map[string]string
-// @Router /api/auth/me [get]
+// Me reports the user behind the current session.
 func (h *Handler) Me(c *gin.Context) {
-	userID, ok := auth.GetUserID(c)
+	user, ok := auth.GetUser(c)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Error: "not authenticated"})
 		return
 	}
 
-	email, _ := c.Get("user_email")
-	c.JSON(http.StatusOK, domain.UserResponse{
-		ID:    userID,
-		Email: email.(string),
-	})
+	c.JSON(http.StatusOK, domain.AuthResponse{User: user})
 }
 
-// Dashboard godoc
-// @Summary Example protected endpoint
-// @Tags dashboard
-// @Produce json
-// @Success 200 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /api/dashboard [get]
+// Dashboard is an example protected endpoint.
 func (h *Handler) Dashboard(c *gin.Context) {
-	email, _ := c.Get("user_email")
-	c.JSON(http.StatusOK, gin.H{
-		"message": "welcome to the dashboard",
-		"email":   email,
+	user, ok := auth.GetUser(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, domain.ErrorResponse{Error: "not authenticated"})
+		return
+	}
+
+	c.JSON(http.StatusOK, domain.DashboardResponse{
+		Message: "welcome to the dashboard",
+		Email:   user.Email,
 	})
 }
 

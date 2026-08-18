@@ -1,10 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { User } from '@/lib/types';
+import { createContext, useCallback, useContext, useMemo } from 'react';
+import { useLogin, useLogout, useMe, useRegister } from '@/lib/api/hooks';
+import type { UserResponse } from '@/lib/api/types';
 
 interface AuthContextType {
-	user: User | null;
+	user: UserResponse | null;
 	loading: boolean;
 	login: (email: string, password: string) => Promise<void>;
 	register: (email: string, password: string) => Promise<void>;
@@ -13,59 +14,36 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function extractError(data: unknown, fallback: string): string {
-	if (data && typeof data === 'object' && 'error' in data && typeof (data as Record<string, unknown>).error === 'string') {
-		return (data as Record<string, string>).error;
-	}
-	return fallback;
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = useState<User | null>(null);
-	const [loading, setLoading] = useState(true);
+	const { data, isPending } = useMe();
+	const loginMutation = useLogin();
+	const registerMutation = useRegister();
+	const logoutMutation = useLogout();
 
-	useEffect(() => {
-		fetch('/api/auth/me', { credentials: 'include' })
-			.then(async (res) => {
-				if (res.ok) {
-					const data = await res.json();
-					setUser(data.user ?? data);
-				}
-			})
-			.catch(() => {})
-			.finally(() => setLoading(false));
-	}, []);
+	const login = useCallback(
+		async (email: string, password: string) => {
+			await loginMutation.mutateAsync({ email, password });
+		},
+		[loginMutation],
+	);
 
-	const login = useCallback(async (email: string, password: string) => {
-		const res = await fetch('/api/auth/login', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-			body: JSON.stringify({ email, password }),
-		});
-		const data = await res.json();
-		if (!res.ok) throw new Error(extractError(data, 'Login failed'));
-		setUser(data.user ?? data);
-	}, []);
-
-	const register = useCallback(async (email: string, password: string) => {
-		const res = await fetch('/api/auth/register', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-			body: JSON.stringify({ email, password }),
-		});
-		const data = await res.json();
-		if (!res.ok) throw new Error(extractError(data, 'Registration failed'));
-		setUser(data.user ?? data);
-	}, []);
+	const register = useCallback(
+		async (email: string, password: string) => {
+			await registerMutation.mutateAsync({ email, password });
+		},
+		[registerMutation],
+	);
 
 	const logout = useCallback(async () => {
-		await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-		setUser(null);
-	}, []);
+		await logoutMutation.mutateAsync();
+	}, [logoutMutation]);
 
-	return <AuthContext value={{ user, loading, login, register, logout }}>{children}</AuthContext>;
+	const value = useMemo(
+		() => ({ user: data?.user ?? null, loading: isPending, login, register, logout }),
+		[data, isPending, login, register, logout],
+	);
+
+	return <AuthContext value={value}>{children}</AuthContext>;
 }
 
 export function useAuth(): AuthContextType {

@@ -20,11 +20,6 @@ import (
 	"github.com/thrgamon/project-template/internal/telemetry"
 )
 
-// @title My App API
-// @version 1.0
-// @host localhost:8080
-// @BasePath /api
-
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -73,9 +68,11 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				if err := authSvc.DeleteExpiredSessions(context.Background()); err != nil {
+				cleanupCtx, cancelCleanup := context.WithTimeout(ctx, 30*time.Second)
+				if err := authSvc.DeleteExpiredSessions(cleanupCtx); err != nil {
 					slog.Error("cleaning expired sessions", "error", err)
 				}
+				cancelCleanup()
 			case <-ctx.Done():
 				return
 			}

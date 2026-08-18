@@ -1,0 +1,13 @@
+# Generates TypeScript types from the Go API types in internal/domain.
+# internal/domain is the single source of truth for the HTTP API shape;
+# run `just tygo` (or `just sync`) after changing it.
+packages:
+  - path: "github.com/thrgamon/project-template/internal/domain"
+    output_path: "src/lib/api/types.ts"
+    indent: "\t"
+    frontmatter: |
+      // Source: internal/domain. Regenerate with `just tygo`.
+    type_mappings:
+      time.Time: "string"
+      uuid.UUID: "string"
+      json.RawMessage: "unknown"

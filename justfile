@@ -1,5 +1,15 @@
+# Pinned versions of the external tools the codegen and migration steps need.
+# tygo is not listed: it is pinned in go.mod and run via `go tool tygo`.
+SQLC_VERSION := "v1.31.1"
+GOOSE_VERSION := "v3.27.3"
+
 default:
     @just --list
+
+# Install the pinned external tools into $GOBIN
+install-tools:
+    go install github.com/sqlc-dev/sqlc/cmd/sqlc@{{SQLC_VERSION}}
+    go install github.com/pressly/goose/v3/cmd/goose@{{GOOSE_VERSION}}
 
 # --- Development ---
 
@@ -25,7 +35,7 @@ backend:
 
 # Run frontend locally (outside docker)
 frontend:
-    npm install && npm run dev
+    yarn install && yarn run dev
 
 # Install git hooks
 install-hooks:
@@ -38,18 +48,13 @@ install-hooks:
 sqlc:
     sqlc generate
 
-# Regenerate swagger.json from Go annotations
-api-docs:
-    swag init -g cmd/server/main.go -o docs --parseInternal
+# Regenerate TypeScript API types from internal/domain
+tygo:
+    go tool tygo generate
 
-# Regenerate frontend TypeScript client from swagger
-api-types:
-    npx orval
-
-# Full sync: sqlc + swagger + orval + format + type check
-sync: sqlc api-docs api-types
-    npx biome format --write src/lib/api/generated || true
-    npm run check
+# Full sync: sqlc + tygo + type check
+sync: sqlc tygo
+    yarn run check
     go vet ./...
 
 # --- Quality ---
@@ -63,36 +68,36 @@ lint:
 test:
     go test -race ./...
 
-# Format Go code
+# Format Go code (gofmt + goimports, configured in .golangci.yml)
 fmt:
-    gofmt -s -w .
+    golangci-lint fmt ./...
 
 # Frontend lint
 fe-lint:
-    npm run lint
+    yarn run lint
 
 # Frontend lint with auto-fix
 fe-lint-fix:
-    npm run lint:fix
+    yarn run lint:fix
 
 # Frontend format
 fe-fmt:
-    npm run format
+    yarn run format
 
 # Run all checks (lint + test + type-check)
 check: lint test
-    npm run check
-    npm run lint
+    yarn run check
+    yarn run lint
 
 # --- E2E Tests ---
 
 # Run Playwright e2e tests (requires server at localhost:3000)
 e2e:
-    npx playwright test
+    yarn playwright test
 
 # Run Playwright with UI mode
 e2e-ui:
-    npx playwright test --ui
+    yarn playwright test --ui
 
 # --- Database ---
 

@@ -1,8 +1,60 @@
 version: "2"
+
 linters:
+  # errcheck, govet, ineffassign, staticcheck and unused are enabled by default.
   enable:
-    - errcheck
-    - govet
-    - ineffassign
-    - staticcheck
-    - unused
+    - bodyclose      # HTTP response bodies must be closed
+    - contextcheck   # do not drop an inherited context
+    - errorlint      # compare errors with errors.Is/As, wrap with %w
+    - exhaustive     # every named-constant type must be handled in full
+    - gosec          # common security mistakes
+    - nilerr         # do not return nil after checking err != nil
+    - revive         # general style and correctness
+    - rowserrcheck   # sql.Rows.Err() must be checked
+    - sqlclosecheck  # sql.Rows and sql.Stmt must be closed
+
+  settings:
+    exhaustive:
+      # A default case counts as handling the remaining values.
+      default-signifies-exhaustive: true
+    errcheck:
+      # Deliberate discards must be written as `_ = f()`, not bare `f()`.
+      check-blank: false
+    revive:
+      # Correctness and idiom only. The doc-comment rules (exported,
+      # package-comments) are deliberately omitted: this is an application,
+      # not a published library, and they generate churn without catching bugs.
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: use-any          # matches the "use any, not interface{}" rule
+        - name: var-declaration
+        - name: var-naming
+
+  exclusions:
+    # Files carrying a "Code generated ... DO NOT EDIT." header are skipped.
+    generated: lax
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

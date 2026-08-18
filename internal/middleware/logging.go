@@ -5,8 +5,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/thrgamon/project-template/internal/auth"
 )
 
+// Logger emits one structured line per request. It runs after RequestID and
+// (where mounted) RequireAuth, so it can attach both identifiers.
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -24,11 +28,11 @@ func Logger() gin.HandlerFunc {
 			slog.String("client_ip", c.ClientIP()),
 		}
 
-		if reqID, ok := c.Get("request_id"); ok {
-			attrs = append(attrs, slog.String("request_id", reqID.(string)))
+		if reqID, ok := GetRequestID(c); ok {
+			attrs = append(attrs, slog.String("request_id", reqID))
 		}
-		if userID, ok := c.Get("user_id"); ok {
-			attrs = append(attrs, slog.Any("user_id", userID))
+		if user, ok := auth.GetUser(c); ok {
+			attrs = append(attrs, slog.Int64("user_id", int64(user.ID)))
 		}
 
 		msg := "request"

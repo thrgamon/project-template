@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -60,6 +61,11 @@ func (s *Server) Run(addr string) error {
 	s.http = &http.Server{
 		Addr:    addr,
 		Handler: s.engine,
+		// Bound how long a slow or idle peer can hold a connection open.
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	fmt.Printf("HTTP server listening on %s\n", addr)
