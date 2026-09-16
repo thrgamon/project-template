@@ -3,14 +3,7 @@ go = "1.25"
 node = "22"
 
 [env]
-# Database
-POSTGRES_DB = "myapp"
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "postgres"
-DATABASE_URL = "postgres://postgres:postgres@localhost:5432/myapp?sslmode=disable"
-
 # Application
-PORT = "8080"
 ENVIRONMENT = "development"
 
 # Auth

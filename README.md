@@ -27,14 +27,17 @@ tygo needs no install: it is pinned in `go.mod` and run via `go tool tygo`.
    go mod edit -module github.com/thrgamon/myapp
    ```
 
-3. Update `mise.toml` with your app name for `POSTGRES_DB` and `DATABASE_URL`.
-
-4. Start development:
+3. Start development:
    ```bash
    just dev
    ```
 
-   Backend: http://localhost:8080, Frontend: http://localhost:3000
+   The first command creates a gitignored `.worktree.env` with a unique
+   Compose project name, PostgreSQL database, volume set, and local port block
+   for this worktree. It prints the chosen ports; use `FRONTEND_PORT` and
+   `BACKEND_PORT` from that file to open the app. This lets multiple agents run
+   `just dev` in separate worktrees without sharing containers, databases, or
+   fixture state.
 
 ## Project Structure
 
@@ -98,13 +101,21 @@ Session-based authentication using HTTP-only cookies:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `8080` | Backend server port |
-| `DATABASE_URL` | `postgres://...localhost.../myapp` | PostgreSQL connection string |
+| `PORT` | `8080` | Backend server port (the local `just backend` command assigns a worktree-specific port) |
+| `DATABASE_URL` | `postgres://...localhost.../myapp` | PostgreSQL connection string (the local `just backend` command assigns an isolated database) |
 | `ENVIRONMENT` | `development` | `development` or `production` |
 | `SESSION_MAX_AGE` | `604800` | Session duration in seconds (7 days) |
 | `COOKIE_SECURE` | `false` | Set `true` in production (HTTPS only) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | (empty) | Set to enable OpenTelemetry (no-op if unset) |
 | `API_URL` | `http://localhost:8080` | Backend URL for Next.js rewrites |
+
+### Concurrent worktrees
+
+Use the `just` development commands (or `./scripts/compose`), rather than
+plain `docker compose`. The wrapper creates `.worktree.env` once per worktree
+and passes it to Compose. The file is local and gitignored; delete it only if
+you deliberately want a new isolated local environment. `just db-reset` only
+destroys the current worktree's database volume.
 
 ## Commands
 

@@ -5,9 +5,9 @@ services:
       - ./alloy-config.alloy:/etc/alloy/config.alloy
     command: ["run", "/etc/alloy/config.alloy"]
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "12345:12345"
+      - "127.0.0.1:${ALLOY_GRPC_PORT:?Run the Compose wrapper or just monitoring-up}:4317"
+      - "127.0.0.1:${ALLOY_HTTP_PORT:?Run the Compose wrapper or just monitoring-up}:4318"
+      - "127.0.0.1:${ALLOY_UI_PORT:?Run the Compose wrapper or just monitoring-up}:12345"
     depends_on:
       - prometheus
       - loki
@@ -20,7 +20,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:?Run the Compose wrapper or just monitoring-up}:9090"
     restart: unless-stopped
 
   loki:
@@ -29,7 +29,7 @@ services:
       - ./loki-config.yml:/etc/loki/local-config.yaml
       - loki_data:/loki
     ports:
-      - "3100:3100"
+      - "127.0.0.1:${LOKI_PORT:?Run the Compose wrapper or just monitoring-up}:3100"
     restart: unless-stopped
 
   tempo:
@@ -39,7 +39,7 @@ services:
       - tempo_data:/var/tempo
     command: ["-config.file=/etc/tempo/config.yaml"]
     ports:
-      - "3200:3200"
+      - "127.0.0.1:${TEMPO_PORT:?Run the Compose wrapper or just monitoring-up}:3200"
     restart: unless-stopped
 
   grafana:
@@ -51,7 +51,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana_data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      - "127.0.0.1:${GRAFANA_PORT:?Run the Compose wrapper or just monitoring-up}:3000"
     depends_on:
       - prometheus
       - loki

@@ -9,7 +9,7 @@ export default defineConfig({
 	reporter: 'list',
 	timeout: 45000,
 	use: {
-		baseURL: 'http://localhost:3000',
+		baseURL: process.env.BASE_URL || 'http://localhost:3000',
 		trace: 'on-first-retry',
 		actionTimeout: 10000,
 	},

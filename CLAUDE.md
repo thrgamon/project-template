@@ -7,6 +7,11 @@
 - `just e2e` to run Playwright tests (requires dev server)
 - Use `go vet` before pushing
 
+## Concurrent Worktrees
+- Always start local services with `just dev`, `just dev-monitoring`, or `./scripts/compose`; do not use plain `docker compose`.
+- The first Compose command creates a gitignored `.worktree.env` containing a stable, unique Compose project name, ports, PostgreSQL database, and isolated volumes for this worktree.
+- Read `.worktree.env` to find the frontend/backend URLs. `just db-reset` destroys only this worktree's database and fixture state.
+
 ## Architecture
 - Go backend: cmd/server/ + internal/ (Gin, pgx, sqlc)
 - Next.js frontend: src/ (App Router, React Query, shadcn/ui, Tailwind v4)
