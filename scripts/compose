@@ -1,0 +1,14 @@
+#!/bin/sh
+# Docker Compose entrypoint used by just recipes. Never call plain
+# `docker compose` from this template: it would use shared names and ports.
+set -eu
+
+root_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+"$root_dir/scripts/worktree-env"
+
+# shellcheck disable=SC1090
+. "$root_dir/.worktree.env"
+exec docker compose \
+  --project-name "$COMPOSE_PROJECT_NAME" \
+  --env-file "$root_dir/.worktree.env" \
+  "$@"

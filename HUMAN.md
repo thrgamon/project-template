@@ -3,7 +3,7 @@
 ## After cloning this template for a new project
 
 - [ ] Update Go module path in all `.go` files, `go.mod` and `tygo.yaml`
-- [ ] Update `mise.toml` with app-specific `POSTGRES_DB` and `DATABASE_URL`
+- [ ] Start local services with `just dev`; it creates a gitignored `.worktree.env` with isolated database and port settings for this worktree
 - [ ] Update `CLAUDE.md` with project-specific guidelines
 - [ ] Run `yarn install` to generate `yarn.lock`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end

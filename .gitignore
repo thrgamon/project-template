@@ -1,5 +1,6 @@
 # Environment
 mise.local.toml
+.worktree.env
 
 # Go
 bin/

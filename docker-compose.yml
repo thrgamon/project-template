@@ -4,9 +4,9 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: myapp
+      POSTGRES_DB: ${POSTGRES_DB:?Run the Compose wrapper or just dev}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:?Run the Compose wrapper or just dev}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,9 +20,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "8080:8080"
+      - "127.0.0.1:${BACKEND_PORT:?Run the Compose wrapper or just dev}:8080"
     environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/myapp?sslmode=disable
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/${POSTGRES_DB:?Run the Compose wrapper or just dev}?sslmode=disable
       PORT: "8080"
       ENVIRONMENT: development
       COOKIE_SECURE: "false"
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend.dev
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${FRONTEND_PORT:?Run the Compose wrapper or just dev}:3000"
     environment:
       API_URL: http://backend:8080
     volumes:
@@ -65,9 +65,9 @@ services:
       - ./monitoring/alloy-config.alloy:/etc/alloy/config.alloy
     command: ["run", "/etc/alloy/config.alloy"]
     ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "12345:12345"
+      - "127.0.0.1:${ALLOY_GRPC_PORT:?Run the Compose wrapper or just dev}:4317"
+      - "127.0.0.1:${ALLOY_HTTP_PORT:?Run the Compose wrapper or just dev}:4318"
+      - "127.0.0.1:${ALLOY_UI_PORT:?Run the Compose wrapper or just dev}:12345"
     depends_on:
       - prometheus
       - loki
@@ -79,7 +79,7 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT:?Run the Compose wrapper or just dev}:9090"
 
   loki:
     image: grafana/loki:latest
@@ -87,7 +87,7 @@ services:
     volumes:
       - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
     ports:
-      - "3100:3100"
+      - "127.0.0.1:${LOKI_PORT:?Run the Compose wrapper or just dev}:3100"
 
   tempo:
     image: grafana/tempo:latest
@@ -96,7 +96,7 @@ services:
       - ./monitoring/tempo-config.yml:/etc/tempo/config.yaml
     command: ["-config.file=/etc/tempo/config.yaml"]
     ports:
-      - "3200:3200"
+      - "127.0.0.1:${TEMPO_PORT:?Run the Compose wrapper or just dev}:3200"
 
   grafana:
     image: grafana/grafana:latest
@@ -107,7 +107,7 @@ services:
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - "3001:3000"
+      - "127.0.0.1:${GRAFANA_PORT:?Run the Compose wrapper or just dev}:3000"
     depends_on:
       - prometheus
       - loki

@@ -15,27 +15,27 @@ install-tools:
 
 # Start all services (postgres, backend, frontend)
 dev:
-    docker compose up --build
+    ./scripts/compose up --build
 
 # Stop all services
 dev-down:
-    docker compose down
+    ./scripts/compose down
 
 # View backend logs
 logs:
-    docker compose logs -f backend
+    ./scripts/compose logs -f backend
 
 # Start with monitoring stack
 dev-monitoring:
-    docker compose --profile monitoring up --build
+    ./scripts/compose --profile monitoring up --build
 
 # Run Go backend locally (outside docker)
 backend:
-    go run ./cmd/server
+    ./scripts/worktree-env && . ./.worktree.env && DATABASE_URL="postgres://postgres:postgres@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" PORT="${BACKEND_PORT}" go run ./cmd/server
 
 # Run frontend locally (outside docker)
 frontend:
-    yarn install && yarn run dev
+    ./scripts/worktree-env && . ./.worktree.env && yarn install && API_URL="http://localhost:${BACKEND_PORT}" yarn run dev -- -p "${FRONTEND_PORT}"
 
 # Install git hooks
 install-hooks:
@@ -91,31 +91,31 @@ check: lint test
 
 # --- E2E Tests ---
 
-# Run Playwright e2e tests (requires server at localhost:3000)
+# Run Playwright e2e tests against this worktree's frontend service
 e2e:
-    yarn playwright test
+    ./scripts/worktree-env && . ./.worktree.env && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test
 
 # Run Playwright with UI mode
 e2e-ui:
-    yarn playwright test --ui
+    ./scripts/worktree-env && . ./.worktree.env && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --ui
 
 # --- Database ---
 
 # Run migrations up
 migrate:
-    goose -dir migrations postgres "${DATABASE_URL}" up
+    ./scripts/worktree-env && . ./.worktree.env && goose -dir migrations postgres "postgres://postgres:postgres@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" up
 
 # Roll back one migration
 migrate-down:
-    goose -dir migrations postgres "${DATABASE_URL}" down
+    ./scripts/worktree-env && . ./.worktree.env && goose -dir migrations postgres "postgres://postgres:postgres@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" down
 
 # Reset all migrations
 migrate-reset:
-    goose -dir migrations postgres "${DATABASE_URL}" reset
+    ./scripts/worktree-env && . ./.worktree.env && goose -dir migrations postgres "postgres://postgres:postgres@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" reset
 
 # Show migration status
 migrate-status:
-    goose -dir migrations postgres "${DATABASE_URL}" status
+    ./scripts/worktree-env && . ./.worktree.env && goose -dir migrations postgres "postgres://postgres:postgres@localhost:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable" status
 
 # Create a new migration
 migrate-create NAME:
@@ -123,8 +123,8 @@ migrate-create NAME:
 
 # Reset database (destroy volume and recreate)
 db-reset:
-    docker compose down -v
-    docker compose up -d postgres
+    ./scripts/compose down -v
+    ./scripts/compose up -d postgres
     @echo "Waiting for postgres..."
     @sleep 3
     just migrate
@@ -177,16 +177,16 @@ dokku-db-backup:
 
 # Start monitoring stack
 monitoring-up:
-    docker compose -f monitoring/docker-compose.yml up -d
+    ./scripts/compose -f monitoring/docker-compose.yml up -d
 
 # Stop monitoring stack
 monitoring-down:
-    docker compose -f monitoring/docker-compose.yml down
+    ./scripts/compose -f monitoring/docker-compose.yml down
 
 # View monitoring logs
 monitoring-logs:
-    docker compose -f monitoring/docker-compose.yml logs -f
+    ./scripts/compose -f monitoring/docker-compose.yml logs -f
 
 # Restart monitoring stack
 monitoring-restart:
-    docker compose -f monitoring/docker-compose.yml restart
+    ./scripts/compose -f monitoring/docker-compose.yml restart
