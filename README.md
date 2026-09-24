@@ -1,6 +1,8 @@
 # Project Template
 
-Go + Next.js + Postgres template with session-based authentication, type-safe code generation, and Dokku deployment.
+Go + SvelteKit + Postgres template with session-based authentication and a
+single-process Dokku deployment. The frontend is static-first: Go serves the
+compiled SvelteKit site and `/api` from one origin in production.
 
 ## Prerequisites
 
@@ -10,7 +12,6 @@ Go + Next.js + Postgres template with session-based authentication, type-safe co
 - [yarn](https://classic.yarnpkg.com/) (Node package manager)
 
 Run `just install-tools` to install the pinned versions of sqlc and goose.
-tygo needs no install: it is pinned in `go.mod` and run via `go tool tygo`.
 
 ## Quick Start
 
@@ -23,7 +24,6 @@ tygo needs no install: it is pinned in `go.mod` and run via `go tool tygo`.
 2. Update the Go module path:
    ```bash
    fd -t f -e go -x sed -i '' 's|github.com/thrgamon/project-template|github.com/thrgamon/myapp|g' {}
-   sed -i '' 's|github.com/thrgamon/project-template|github.com/thrgamon/myapp|g' tygo.yaml
    go mod edit -module github.com/thrgamon/myapp
    ```
 
@@ -48,45 +48,47 @@ internal/
   auth/              # Auth service + middleware
   config/            # Environment-based config
   db/                # sqlc generated (DO NOT EDIT)
-  domain/            # API request/response types (source of truth, feeds tygo)
+  domain/            # API request/response types
   middleware/         # Request ID, logging
   server/            # HTTP server setup, routing, CORS
 migrations/          # goose SQL migrations
 queries/             # sqlc SQL query files
-src/                 # Next.js App Router frontend
-  app/               # Pages (login, register, dashboard)
-  lib/               # Auth context, query provider
-  lib/api/types.ts   # tygo generated from internal/domain (DO NOT EDIT)
-  lib/api/client.ts  # Typed fetch wrapper over the Go API
-  lib/api/hooks.ts   # React Query hooks built on the client
-  components/        # Shared components (ErrorBanner, shadcn/ui)
+frontend/            # SvelteKit static frontend
+  src/routes/        # Pages (login, register, dashboard)
+  src/lib/api.ts     # Handwritten browser DTOs and API client
+  svelte.config.js   # adapter-static configuration
 e2e/                 # Playwright end-to-end tests
 monitoring/          # Grafana, Prometheus, Loki, Tempo configs
 deploy/              # Dokku entrypoint script
 ```
 
-## Code Generation
+## API types and code generation
 
-After changing `migrations/`, `queries/`, or `internal/domain/`:
+After changing `migrations/` or `queries/`:
 
 ```bash
 just sync
 ```
 
-Two generators, each with one input and one output:
+One generator is deliberately kept:
 
 | Generator | Input | Output |
 |-----------|-------|--------|
 | sqlc | `migrations/` + `queries/` | `internal/db/` |
-| tygo | `internal/domain/` | `src/lib/api/types.ts` |
 
-`internal/domain` is the single source of truth for the API shape. The
-TypeScript types are generated from it; `src/lib/api/client.ts` and
-`src/lib/api/hooks.ts` are hand-written and consume those types, so a
-mismatch between the Go response and the frontend is a type error.
+Keep browser-facing request and response DTOs hand-written in
+`frontend/src/lib/api.ts`. They are a small, explicit boundary rather than a
+generated mirror of Go structs. Test owned HTTP endpoints whenever that
+contract changes.
 
-tygo is pinned in `go.mod` as a tool dependency, so it needs no separate
-install: `go tool tygo generate` works on a fresh clone.
+## Rendering model
+
+The default is a static SvelteKit build (`adapter-static`) served by Go. It is
+one process, uses same-origin cookies, and needs no production CORS setup.
+
+SSR is an explicit escape hatch: only adopt it for a documented requirement
+that static HTML and browser API calls cannot meet. Then use adapter-node, add
+a defined production process, and cover the server-rendered route end-to-end.
 
 ## Auth Flow
 
@@ -107,7 +109,7 @@ Session-based authentication using HTTP-only cookies:
 | `SESSION_MAX_AGE` | `604800` | Session duration in seconds (7 days) |
 | `COOKIE_SECURE` | `false` | Set `true` in production (HTTPS only) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | (empty) | Set to enable OpenTelemetry (no-op if unset) |
-| `API_URL` | `http://localhost:8080` | Backend URL for Next.js rewrites |
+| `STATIC_DIR` | (empty) | Production SvelteKit build directory served by Go |
 
 ### Concurrent worktrees
 
@@ -124,7 +126,7 @@ just dev              # Start all services
 just test             # Run Go tests
 just check            # Lint + test + type-check
 just fmt              # Format Go code
-just sync             # Regenerate sqlc + tygo output
+just sync             # Regenerate sqlc output + check the SvelteKit app
 just migrate          # Run migrations
 just e2e              # Run Playwright tests
 just dev-monitoring   # Start with Grafana/Prometheus/Loki/Tempo
@@ -140,4 +142,5 @@ just install-hooks    # Install pre-push hook
 4. Add remote: `git remote add dokku dokku@your-server:myapp`
 5. Deploy: `just dokku-deploy`
 
-Migrations run automatically on deploy via `app.json` predeploy hook.
+Migrations run automatically on deploy via `app.json` predeploy hook. The
+Docker build compiles SvelteKit output; Go serves it from `STATIC_DIR`.

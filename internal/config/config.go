@@ -10,6 +10,7 @@ type Config struct {
 	Port          int
 	DatabaseURL   string
 	Environment   string
+	StaticDir     string
 	SessionMaxAge time.Duration
 	CookieDomain  string
 	CookieSecure  bool
@@ -49,6 +50,7 @@ func LoadConfig() Config {
 		Port:          port,
 		DatabaseURL:   databaseURL,
 		Environment:   environment,
+		StaticDir:     os.Getenv("STATIC_DIR"),
 		SessionMaxAge: sessionMaxAge,
 		CookieDomain:  os.Getenv("COOKIE_DOMAIN"),
 		CookieSecure:  cookieSecure,

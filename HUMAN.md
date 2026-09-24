@@ -2,10 +2,10 @@
 
 ## After cloning this template for a new project
 
-- [ ] Update Go module path in all `.go` files, `go.mod` and `tygo.yaml`
+- [ ] Update Go module path in all `.go` files and `go.mod`
 - [ ] Start local services with `just dev`; it creates a gitignored `.worktree.env` with isolated database and port settings for this worktree
 - [ ] Update `CLAUDE.md` with project-specific guidelines
-- [ ] Run `yarn install` to generate `yarn.lock`
+- [ ] Run `cd frontend && yarn install` to generate `frontend/yarn.lock`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end
 - [ ] Install Go 1.25 via mise if not already available (`mise install go@1.25`)
 
@@ -22,9 +22,9 @@ ssh dokku@<server> builder-dockerfile:set <appname> dockerfile-path Dockerfile.d
 
 Two things the Docker build assumes about the git tree:
 
-- Generated code (`internal/db/` from sqlc, `src/lib/api/types.ts` from tygo)
-  must be committed. The build does not run the generators.
-- Empty directories such as `public/` need a `.gitkeep`, or git will not track
+- Generated code (`internal/db/` from sqlc) must be committed. The build does
+  not run the generator.
+- Empty directories such as `frontend/static/` need a `.gitkeep`, or git will not track
   them and they will be missing from the build context.
 
 - [ ] Create Dokku app on server: `dokku apps:create <appname>`

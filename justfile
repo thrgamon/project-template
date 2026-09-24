@@ -1,5 +1,4 @@
-# Pinned versions of the external tools the codegen and migration steps need.
-# tygo is not listed: it is pinned in go.mod and run via `go tool tygo`.
+# Pinned versions of the external tools the SQL codegen and migration steps need.
 # Keep these compatible with the Go 1.25 toolchain declared in go.mod.
 SQLC_VERSION := "v1.30.0"
 GOOSE_VERSION := "v3.26.0"
@@ -36,7 +35,7 @@ backend:
 
 # Run frontend locally (outside docker)
 frontend:
-    ./scripts/worktree-env && . ./.worktree.env && yarn install && API_URL="http://localhost:${BACKEND_PORT}" yarn run dev -- -p "${FRONTEND_PORT}"
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && yarn install && API_URL="http://localhost:${BACKEND_PORT}" yarn run dev -- --port "${FRONTEND_PORT}"
 
 # Install git hooks
 install-hooks:
@@ -49,13 +48,9 @@ install-hooks:
 sqlc:
     sqlc generate
 
-# Regenerate TypeScript API types from internal/domain
-tygo:
-    go tool tygo generate
-
-# Full sync: sqlc + tygo + type check
-sync: sqlc tygo
-    yarn run check
+# Full sync: sqlc + frontend type check
+sync: sqlc
+    cd frontend && yarn run check
     go vet ./...
 
 # --- Quality ---
@@ -75,30 +70,30 @@ fmt:
 
 # Frontend lint
 fe-lint:
-    yarn run lint
+    cd frontend && yarn run lint
 
 # Frontend lint with auto-fix
 fe-lint-fix:
-    yarn run lint:fix
+    cd frontend && yarn run lint:fix
 
 # Frontend format
 fe-fmt:
-    yarn run format
+    cd frontend && yarn run format
 
 # Run all checks (lint + test + type-check)
 check: lint test
-    yarn run check
-    yarn run lint
+    cd frontend && yarn run check
+    cd frontend && yarn run lint
 
 # --- E2E Tests ---
 
 # Run Playwright e2e tests against this worktree's frontend service
 e2e:
-    ./scripts/worktree-env && . ./.worktree.env && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --config=../playwright.config.ts
 
 # Run Playwright with UI mode
 e2e-ui:
-    ./scripts/worktree-env && . ./.worktree.env && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --ui
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --config=../playwright.config.ts --ui
 
 # --- Database ---
 
@@ -143,7 +138,7 @@ dokku-build:
 # Clean build artifacts
 clean:
     rm -rf bin/ tmp/ coverage.out docs/
-    rm -rf .next build node_modules/.cache test-results playwright-report
+    rm -rf frontend/.svelte-kit frontend/build frontend/node_modules/.cache test-results playwright-report
 
 # --- Dokku Deployment ---
 
