@@ -6,22 +6,32 @@ package db
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
-type Session struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    int32     `json:"user_id"`
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-	CreatedAt time.Time `json:"created_at"`
+type AuthSession struct {
+	TokenHash   []byte    `json:"token_hash"`
+	Issuer      string    `json:"issuer"`
+	Subject     string    `json:"subject"`
+	LocalUserID string    `json:"local_user_id"`
+	ExpiresAt   time.Time `json:"expires_at"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+type AuthUser struct {
+	Issuer      string    `json:"issuer"`
+	Subject     string    `json:"subject"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"display_name"`
+	LocalUserID string    `json:"local_user_id"`
+	Role        string    `json:"role"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type User struct {
-	ID           int32     `json:"id"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"password_hash"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID        int32     `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

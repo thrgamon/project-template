@@ -1,0 +1,23 @@
+version: 2
+project_name: tygo
+builds:
+  - binary: tygo
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/gzuidhof/tygo/cmd.version={{.Version}} -X github.com/gzuidhof/tygo/cmd.commit={{.Commit}} -X github.com/gzuidhof/tygo/cmd.commitDate={{.CommitDate}}
+archives:
+  - id: tygo
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Tag }}_
+      {{- .Os }}_
+      {{- .Arch}}
+    format_overrides:
+      - goos: windows
+        format: zip

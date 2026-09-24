@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
@@ -42,16 +41,9 @@ func New(opts Options) *Server {
 	engine.Use(gin.Recovery())
 	engine.Use(middleware.RequestID())
 
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowMethods = []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Content-Type", "Authorization"}
-	corsConfig.AllowCredentials = true
-	if opts.Config.Environment == "production" {
-		corsConfig.AllowAllOrigins = true
-	} else {
-		corsConfig.AllowOrigins = []string{"http://localhost:3000"}
-	}
-	engine.Use(cors.New(corsConfig))
+	// The SvelteKit frontend calls /api on the same origin. Keeping browser API
+	// requests same-origin lets host-only session cookies and CSRF origin checks
+	// apply without a permissive credentialed CORS policy.
 	engine.Use(middleware.Logger())
 
 	registerRoutes(engine, opts)

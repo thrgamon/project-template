@@ -3,34 +3,17 @@
 // API client; validate this boundary with endpoint tests rather than codegen.
 package domain
 
-// RegisterRequest is the body of POST /api/auth/register.
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=8"`
-}
-
-// LoginRequest is the body of POST /api/auth/login.
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
 // UserResponse describes an authenticated user.
 type UserResponse struct {
 	ID    int32  `json:"id"`
 	Email string `json:"email"`
 }
 
-// AuthResponse is returned by every endpoint that establishes or reports the
-// current session: register, login and me.
+// AuthResponse is returned by GET /api/auth/me after an Auth0 session has
+// been mapped to an active local membership.
 type AuthResponse struct {
-	User UserResponse `json:"user"`
-}
-
-// MessageResponse is returned by endpoints that report an outcome with no
-// other payload, such as logout.
-type MessageResponse struct {
-	Message string `json:"message"`
+	User      UserResponse `json:"user"`
+	CSRFToken string       `json:"csrfToken"`
 }
 
 // HealthResponse is returned by GET /api/health.

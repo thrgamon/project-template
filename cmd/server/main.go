@@ -11,11 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	sharedauth "github.com/thrgamon/infra/go/auth"
 
 	"github.com/thrgamon/project-template/internal/api"
-	"github.com/thrgamon/project-template/internal/auth"
 	"github.com/thrgamon/project-template/internal/config"
-	"github.com/thrgamon/project-template/internal/db"
 	"github.com/thrgamon/project-template/internal/server"
 	"github.com/thrgamon/project-template/internal/telemetry"
 )
@@ -47,11 +46,23 @@ func main() {
 	}
 	cancelPing()
 
-	queries := db.New(pool)
-	authSvc := auth.NewService(queries, cfg)
+	store := sharedauth.NewPGStore(pool)
+	authApp, err := sharedauth.New(ctx, sharedauth.Config{
+		IssuerURL:            cfg.Auth0IssuerURL,
+		ClientID:             cfg.Auth0ClientID,
+		ClientSecret:         cfg.Auth0ClientSecret,
+		RedirectURL:          cfg.Auth0RedirectURL,
+		CookieName:           "session_token",
+		CookieSecure:         cfg.CookieSecure,
+		AllowInsecureCookies: cfg.AllowInsecureCookies,
+		StateSecret:          []byte(cfg.AuthStateSecret),
+		SessionMaxAge:        cfg.SessionMaxAge,
+	}, store, store)
+	if err != nil {
+		log.Fatalf("initialize Auth0 authentication: %v", err)
+	}
 	handler := api.NewHandler(api.HandlerConfig{
-		Auth: authSvc,
-		Cfg:  cfg,
+		Auth: authApp,
 	})
 
 	srv := server.New(server.Options{
@@ -61,7 +72,8 @@ func main() {
 
 	addr := fmt.Sprintf(":%d", cfg.Port)
 
-	// Background session cleanup
+	// Background cleanup only deletes expired opaque Auth0 sessions. Identity
+	// revocation is immediate because every lookup joins current membership.
 	go func() {
 		ticker := time.NewTicker(1 * time.Hour)
 		defer ticker.Stop()
@@ -69,7 +81,7 @@ func main() {
 			select {
 			case <-ticker.C:
 				cleanupCtx, cancelCleanup := context.WithTimeout(ctx, 30*time.Second)
-				if err := authSvc.DeleteExpiredSessions(cleanupCtx); err != nil {
+				if err := store.DeleteExpiredSessions(cleanupCtx); err != nil {
 					slog.Error("cleaning expired sessions", "error", err)
 				}
 				cancelCleanup()

@@ -24,7 +24,7 @@ loadSession();
 			<p>Signed in as {user.email}.</p>
 			<a href="/dashboard">Go to dashboard</a>
 		{:else}
-			<nav aria-label="Account"><a href="/login">Login</a><a href="/register">Register</a></nav>
+			<nav aria-label="Account"><a href="/login">Login</a></nav>
 		{/if}
 	{/if}
 </main>
