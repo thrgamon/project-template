@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -53,6 +55,7 @@ func New(opts Options) *Server {
 	engine.Use(middleware.Logger())
 
 	registerRoutes(engine, opts)
+	registerStaticFiles(engine, opts.Config.StaticDir)
 
 	return &Server{engine: engine}
 }
@@ -86,4 +89,25 @@ func (s *Server) Shutdown(ctx context.Context) error {
 func registerRoutes(router *gin.Engine, opts Options) {
 	apiGroup := router.Group("/api")
 	opts.Handler.Routes(apiGroup)
+}
+
+// registerStaticFiles serves the SvelteKit adapter-static build from the same
+// origin as the API. Local development leaves StaticDir empty and Vite proxies
+// /api requests to the Go process instead.
+func registerStaticFiles(router *gin.Engine, staticDir string) {
+	if staticDir == "" {
+		return
+	}
+	if _, err := os.Stat(staticDir); err != nil {
+		panic(fmt.Sprintf("static frontend directory %q is unavailable: %v", staticDir, err))
+	}
+
+	files := http.FileServer(http.Dir(staticDir))
+	router.NoRoute(func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		files.ServeHTTP(c.Writer, c.Request)
+	})
 }

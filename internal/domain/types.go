@@ -1,6 +1,6 @@
 // Package domain holds the request and response types that make up the HTTP
-// API. It is the single source of truth for the API shape: TypeScript types
-// are generated from this package by tygo (see tygo.yaml).
+// API. Browser-facing DTOs are deliberately hand-written beside the SvelteKit
+// API client; validate this boundary with endpoint tests rather than codegen.
 package domain
 
 // RegisterRequest is the body of POST /api/auth/register.

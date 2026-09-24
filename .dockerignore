@@ -1,0 +1,10 @@
+.git
+.worktree.env
+node_modules
+.svelte-kit
+frontend/node_modules
+frontend/.svelte-kit
+frontend/build
+test-results
+playwright-report
+coverage.out
