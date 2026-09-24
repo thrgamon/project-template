@@ -1,7 +1,8 @@
 # Pinned versions of the external tools the codegen and migration steps need.
 # tygo is not listed: it is pinned in go.mod and run via `go tool tygo`.
-SQLC_VERSION := "v1.31.1"
-GOOSE_VERSION := "v3.27.3"
+# Keep these compatible with the Go 1.25 toolchain declared in go.mod.
+SQLC_VERSION := "v1.30.0"
+GOOSE_VERSION := "v3.26.0"
 
 default:
     @just --list
