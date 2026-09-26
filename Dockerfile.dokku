@@ -16,7 +16,7 @@ FROM golang:1.25-alpine AS backend-builder
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod download
+COPY vendor/ vendor/
 
 # Install goose for migrations
 # Keep in step with GOOSE_VERSION in the justfile.
@@ -24,7 +24,7 @@ ARG GOOSE_VERSION=v3.27.3
 RUN go install github.com/pressly/goose/v3/cmd/goose@${GOOSE_VERSION}
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -trimpath -ldflags="-s -w" -o server ./cmd/server
 
 # Stage 3: Production runtime
 FROM alpine:3.22

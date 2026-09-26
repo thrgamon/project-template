@@ -23,9 +23,11 @@
 - `internal/telemetry/telemetry.go` initializes OTEL SDK; `otelgin` middleware on Gin router for automatic HTTP tracing
 
 ## Auth
-- Session-based with HTTP-only cookies (no JWT)
-- Auth service in internal/auth/, middleware reads session_token cookie
-- Sessions stored in DB, cleaned up hourly
+- Auth0 identity with opaque, hashed server-side sessions (no JWT in the app)
+- Shared module lives at `github.com/thrgamon/infra/go/auth`; it is vendored
+  and framework adapters live in `internal/auth/`
+- Membership is provisioned explicitly by issuer and subject; never add public
+  password signup, email linking, or first-user ownership
 
 ## Conventions
 - Error wrapping: fmt.Errorf("context: %w", err)

@@ -1,8 +1,9 @@
 # Project Template
 
-Go + SvelteKit + Postgres template with session-based authentication and a
-single-process Dokku deployment. The frontend is static-first: Go serves the
-compiled SvelteKit site and `/api` from one origin in production.
+Go + SvelteKit + Postgres template with Auth0 identity mapping, opaque
+server-side sessions, and a single-process Dokku deployment. The frontend is
+static-first: Go serves the compiled SvelteKit site and `/api` from one origin
+in production.
 
 ## Prerequisites
 
@@ -45,7 +46,7 @@ Run `just install-tools` to install the pinned versions of sqlc and goose.
 cmd/server/          # Go entrypoint
 internal/
   api/               # HTTP handlers (HandlerConfig struct)
-  auth/              # Auth service + middleware
+  auth/              # Gin adapters for shared Auth0 middleware
   config/            # Environment-based config
   db/                # sqlc generated (DO NOT EDIT)
   domain/            # API request/response types
@@ -54,7 +55,7 @@ internal/
 migrations/          # goose SQL migrations
 queries/             # sqlc SQL query files
 frontend/            # SvelteKit static frontend
-  src/routes/        # Pages (login, register, dashboard)
+  src/routes/        # Pages (login, dashboard)
   src/lib/api.ts     # Handwritten browser DTOs and API client
   svelte.config.js   # adapter-static configuration
 e2e/                 # Playwright end-to-end tests
@@ -92,12 +93,23 @@ a defined production process, and cover the server-rendered route end-to-end.
 
 ## Auth Flow
 
-Session-based authentication using HTTP-only cookies:
+Auth0 verifies identity; this app decides who may access it. There is no
+password or public registration endpoint.
 
-1. **Register** -- `POST /api/auth/register` -- creates user + session, sets cookie
-2. **Login** -- `POST /api/auth/login` -- validates credentials, sets cookie
-3. **Me** -- `GET /api/auth/me` -- returns current user (requires auth)
-4. **Logout** -- `POST /api/auth/logout` -- deletes session, clears cookie
+1. An application owner runs `go run ./cmd/provision-user` with the exact
+   Auth0 issuer and subject, creating the local user and explicit membership.
+2. `GET /api/auth/login` begins Auth0 Authorization Code + PKCE authentication.
+3. `GET /api/auth/callback` verifies the signed token, maps `(issuer, subject)`
+   to an active membership, and stores only a hash of the opaque session token.
+4. `GET /api/auth/me` returns the local user and CSRF token; state-changing
+   browser requests send that value as `X-CSRF-Token`.
+5. `POST /api/auth/logout` requires that CSRF token and revokes the current
+   server-side session immediately.
+
+The shared dependency is vendored from
+`github.com/thrgamon/infra/go/auth` at
+`v0.0.0-20260924045113-b1d1f320b79f`; Docker builds use that snapshot and do
+not need credentials for the private infra repository.
 
 ## Environment Variables
 
@@ -108,6 +120,12 @@ Session-based authentication using HTTP-only cookies:
 | `ENVIRONMENT` | `development` | `development` or `production` |
 | `SESSION_MAX_AGE` | `604800` | Session duration in seconds (7 days) |
 | `COOKIE_SECURE` | `false` | Set `true` in production (HTTPS only) |
+| `AUTH_ALLOW_INSECURE_COOKIES` | `false` | Set `true` only for local HTTP development; production must leave it unset. |
+| `AUTH0_ISSUER_URL` | required | Auth0 issuer URL, including `https://` |
+| `AUTH0_CLIENT_ID` | required | Confidential web application client ID |
+| `AUTH0_CLIENT_SECRET` | required | Confidential web application client secret |
+| `AUTH0_REDIRECT_URL` | required | Exact registered callback URL ending in `/api/auth/callback` |
+| `AUTH_STATE_SECRET` | required | At least 32 random bytes used to sign short-lived login transactions |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | (empty) | Set to enable OpenTelemetry (no-op if unset) |
 | `STATIC_DIR` | (empty) | Production SvelteKit build directory served by Go |
 
@@ -138,7 +156,7 @@ just install-hooks    # Install pre-push hook
 
 1. Create app: `dokku apps:create myapp`
 2. Create DB: `dokku postgres:create myapp-db && dokku postgres:link myapp-db myapp`
-3. Set config: `dokku config:set myapp ENVIRONMENT=production COOKIE_SECURE=true`
+3. Set production Auth0 configuration through Dokku secrets: `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `AUTH0_ISSUER_URL`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_REDIRECT_URL`, and `AUTH_STATE_SECRET`. Do not set `COOKIE_DOMAIN`; session cookies are host-only.
 4. Add remote: `git remote add dokku dokku@your-server:myapp`
 5. Deploy: `just dokku-deploy`
 

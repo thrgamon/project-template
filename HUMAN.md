@@ -29,7 +29,15 @@ Two things the Docker build assumes about the git tree:
 
 - [ ] Create Dokku app on server: `dokku apps:create <appname>`
 - [ ] Create and link Postgres: `dokku postgres:create <appname>-db && dokku postgres:link <appname>-db <appname>`
-- [ ] Set production config: `dokku config:set <appname> ENVIRONMENT=production COOKIE_SECURE=true COOKIE_DOMAIN=<domain>`
+- [ ] Create the confidential Auth0 web client only after its exact callback and
+  logout URLs are known. Set `AUTH0_ISSUER_URL`, `AUTH0_CLIENT_ID`,
+  `AUTH0_CLIENT_SECRET`, `AUTH0_REDIRECT_URL`, and a 32+-byte
+  `AUTH_STATE_SECRET` through Dokku config; never commit them.
+- [ ] Set production config: `dokku config:set <appname> ENVIRONMENT=production COOKIE_SECURE=true`
+- [ ] After the first Auth0 identity exists, run `go run ./cmd/provision-user
+  -issuer <issuer> -subject <subject> -email <email> -role owner` against the
+  app database. This is the only owner bootstrap path; do not add a public
+  registration route or choose the first user automatically.
 - [ ] Add git remote: `git remote add dokku dokku@<server>:<appname>`
 - [ ] Configure DNS (Cloudflare A record pointing to server IP)
 - [ ] Enable SSL: `dokku letsencrypt:enable <appname>`

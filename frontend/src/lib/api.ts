@@ -4,6 +4,7 @@ export interface User {
 }
 export interface AuthResponse {
 	user: User;
+	csrfToken: string;
 }
 export interface DashboardResponse {
 	message: string;
@@ -38,17 +39,19 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 	return body as T;
 }
 
-function post<T>(path: string, body?: unknown): Promise<T> {
+function post<T>(path: string, body?: unknown, csrfToken?: string): Promise<T> {
 	return request<T>(path, {
 		method: 'POST',
-		...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+		headers: {
+			...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+			...(csrfToken === undefined ? {} : { 'X-CSRF-Token': csrfToken }),
+		},
+		...(body === undefined ? {} : { body: JSON.stringify(body) }),
 	});
 }
 
 export const api = {
-	register: (email: string, password: string) => post<AuthResponse>('/auth/register', { email, password }),
-	login: (email: string, password: string) => post<AuthResponse>('/auth/login', { email, password }),
-	logout: () => post('/auth/logout'),
+	logout: (csrfToken: string) => post('/auth/logout', undefined, csrfToken),
 	me: () => request<AuthResponse>('/auth/me'),
 	dashboard: () => request<DashboardResponse>('/dashboard'),
 };
