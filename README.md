@@ -18,7 +18,7 @@ Run `just install-tools` to install the pinned versions of sqlc and goose.
 
 1. Clone and rename:
    ```bash
-   gh repo create myapp --template thrgamon/project-template
+   gh repo create myapp --private --template thrgamon/project-template
    cd myapp
    ```
 
