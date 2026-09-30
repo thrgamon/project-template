@@ -106,19 +106,12 @@ jobs:
             exit 1
           fi
 
-  deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [migrations, lint, test, check, sync]
+  image:
+    # Dokku builds Dockerfile.dokku on deploy. Build it here so the production
+    # image is validated on every PR. There is no deploy job in the template:
+    # add one when creating an app (README, "Deployment").
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Deploy to Dokku
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DOKKU_SSH_KEY }}" > ~/.ssh/dokku_key
-          chmod 600 ~/.ssh/dokku_key
-          ssh-keyscan -H 5.75.255.138 >> ~/.ssh/known_hosts
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/dokku_key" git remote add dokku dokku@5.75.255.138:myapp
-          GIT_SSH_COMMAND="ssh -i ~/.ssh/dokku_key" git push dokku main --force
+      - name: Build production image
+        run: docker build -f Dockerfile.dokku -t app:ci .

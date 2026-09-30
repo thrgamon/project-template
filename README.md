@@ -154,11 +154,28 @@ just install-hooks    # Install pre-push hook
 
 ## Deployment (Dokku)
 
-1. Create app: `dokku apps:create myapp`
-2. Create DB: `dokku postgres:create myapp-db && dokku postgres:link myapp-db myapp`
+1. Create app: `dokku apps:create myapp` and build from the production Dockerfile: `dokku builder-dockerfile:set myapp dockerfile-path Dockerfile.dokku`
+2. Create DB: `dokku postgres:create myapp-db && dokku postgres:link myapp-db myapp`.
+   Backups are automatic: `thrgamon/infra`'s pg-backup job dumps every Dokku Postgres service nightly, so no per-database schedule is needed.
+   If the app holds bulk derived or re-importable data, exclude it in `backups/exclude-table-data.conf` in that repo (see its `docs/backups.md`).
 3. Set production Auth0 configuration through Dokku secrets: `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `AUTH0_ISSUER_URL`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_REDIRECT_URL`, and `AUTH_STATE_SECRET`. Do not set `COOKIE_DOMAIN`; session cookies are host-only.
-4. Add remote: `git remote add dokku dokku@your-server:myapp`
-5. Deploy: `just dokku-deploy`
+4. Add the deploy job to `.github/workflows/ci.yml`. The template ships without one, because this repository is public and the shared delivery workflow in the private `thrgamon/infra` repository can only be called from private repositories owned by the same account:
+
+   ```yaml
+     deploy:
+       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+       needs: [migrations, lint, test, check, sync, image]
+       uses: thrgamon/infra/.github/workflows/dokku-deploy.yml@main
+       with:
+         app_name: myapp
+         healthcheck_url: https://myapp.tomgamon.xyz/api/health
+       secrets:
+         DOKKU_SSH_KEY: ${{ secrets.DOKKU_SSH_KEY }}
+   ```
+
+   Add the `DOKKU_SSH_KEY` repository secret, a key authorised on the Dokku server (see `thrgamon/infra` `docs/ci-deploy.md`). Every push to `main` that passes CI then deploys.
+
+`just dokku-deploy` (with a `dokku` git remote) remains available for a manual first deploy or recovery.
 
 Migrations run automatically on deploy via `app.json` predeploy hook. The
 Docker build compiles SvelteKit output; Go serves it from `STATIC_DIR`.
