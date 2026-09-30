@@ -17,4 +17,5 @@ COPY --from=build /go/bin/goose /bin/goose
 COPY --from=build /src/migrations /migrations
 COPY --from=build /etc/ssl/certs /etc/ssl/certs
 EXPOSE 8080
+USER 65532:65532
 ENTRYPOINT ["/bin/server"]

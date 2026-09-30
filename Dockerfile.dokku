@@ -31,6 +31,9 @@ FROM alpine:3.22
 
 RUN apk add --no-cache ca-certificates tzdata
 
+# Run as an unprivileged user. The app writes nothing at runtime.
+RUN addgroup -S -g 10001 app && adduser -S -G app -u 10001 app
+
 WORKDIR /app
 
 # Copy Go backend binary
@@ -48,6 +51,7 @@ COPY --from=frontend-builder /app/frontend/build ./frontend/build
 COPY app.json ./
 
 EXPOSE 5000
+USER 10001
 
 ENV STATIC_DIR=/app/frontend/build
 CMD ["./server"]
