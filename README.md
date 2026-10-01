@@ -127,7 +127,27 @@ not need credentials for the private infra repository.
 | `AUTH0_REDIRECT_URL` | required | Exact registered callback URL ending in `/api/auth/callback` |
 | `AUTH_STATE_SECRET` | required | At least 32 random bytes used to sign short-lived login transactions |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | (empty) | Set to enable OpenTelemetry (no-op if unset) |
+| `OTEL_EXPORTER_OTLP_HEADERS` | (empty) | OTLP auth, e.g. `Authorization=Basic%20<base64>` for Grafana Cloud (see Production monitoring) |
 | `STATIC_DIR` | (empty) | Production SvelteKit build directory served by Go |
+
+## Production monitoring
+
+Deployed apps run on the shared Dokku host, whose monitoring is defined in
+`thrgamon/infra` [`docs/monitoring.md`](https://github.com/thrgamon/infra/blob/main/docs/monitoring.md).
+That file is the source of truth; in short:
+
+- Keep `GET /api/health` unauthenticated and returning 200 when the app is
+  healthy. Dokku uses it as the startup check (`app.json`) and the Grafana
+  synthetic check uses it for uptime and TLS expiry.
+- Register the app in infra `apps.yaml` with `health_path: /api/health` and
+  run the synthetics reconciler there.
+- Container metrics, logs, Postgres metrics and the shared "Dokku App"
+  dashboard need no per-app setup. Do not create a per-app dashboard.
+- To export traces, metrics and logs, issue a Grafana Cloud token named after
+  the app on the `dokku` access policy (region `prod-au-southeast-1`; tokens
+  from other regions are rejected) and set
+  `OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-au-southeast-1.grafana.net/otlp`
+  and `OTEL_EXPORTER_OTLP_HEADERS=Authorization=Basic%20<base64 of 1540301:token>`.
 
 ### Concurrent worktrees
 
