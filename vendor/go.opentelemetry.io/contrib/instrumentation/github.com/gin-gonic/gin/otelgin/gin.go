@@ -3,7 +3,7 @@
 
 // Based on https://github.com/DataDog/dd-trace-go/blob/8fb554ff7cf694267f9077ae35e27ce4689ed8b6/contrib/gin-gonic/gin/gintrace.go
 
-package otelgin // import "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+package otelgin
 
 import (
 	"fmt"
@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
+	otelsemconv "go.opentelemetry.io/otel/semconv/v1.43.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin/internal/semconv"
@@ -120,16 +121,15 @@ func Middleware(service string, opts ...Option) gin.HandlerFunc {
 
 		if len(c.Errors) > 0 {
 			span.SetStatus(codes.Error, c.Errors.String())
-			for _, err := range c.Errors {
-				span.RecordError(err.Err) //nolint:forbidigo // TODO: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/8441
+			if len(c.Errors) == 1 {
+				span.SetAttributes(otelsemconv.ErrorType(c.Errors[0].Err))
+			} else {
+				span.SetAttributes(otelsemconv.ErrorTypeOther)
 			}
 		}
 
 		// Record the server-side attributes.
 		var additionalAttributes []attribute.KeyValue
-		if c.FullPath() != "" {
-			additionalAttributes = append(additionalAttributes, sc.Route(c.FullPath()))
-		}
 		if cfg.MetricAttributeFn != nil {
 			additionalAttributes = append(additionalAttributes, cfg.MetricAttributeFn(c.Request)...)
 		}
@@ -143,6 +143,7 @@ func Middleware(service string, opts ...Option) gin.HandlerFunc {
 			MetricAttributes: semconv.MetricAttributes{
 				Req:                  c.Request,
 				StatusCode:           status,
+				Route:                c.FullPath(),
 				AdditionalAttributes: additionalAttributes,
 			},
 			MetricData: semconv.MetricData{

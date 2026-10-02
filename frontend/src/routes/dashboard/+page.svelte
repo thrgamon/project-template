@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ApiError, api, type DashboardResponse, type User } from '$lib/api';
+import { ApiError, api, type DashboardResponse, type User } from '#lib/api.js';
 
 let dashboard = $state<DashboardResponse | null>(null);
 let error = $state('');

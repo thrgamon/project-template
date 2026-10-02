@@ -32,7 +32,8 @@ func LoadConfig() Config {
 
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@localhost:5432/myapp?sslmode=disable"
+		// Local development default for the Compose postgres service, not a secret.
+		databaseURL = "postgres://postgres:postgres@localhost:5432/myapp?sslmode=disable" //nolint:gosec // G101: dev-only default
 	}
 
 	environment := os.Getenv("ENVIRONMENT")

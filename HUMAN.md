@@ -7,7 +7,7 @@
 - [ ] Update `CLAUDE.md` with project-specific guidelines
 - [ ] Run `cd frontend && yarn install` to generate `frontend/yarn.lock`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end
-- [ ] Install Go 1.25 via mise if not already available (`mise install go@1.25`)
+- [ ] Install Go 1.27 via mise if not already available (`mise install go@1.27`)
 
 ## Dokku deployment setup
 

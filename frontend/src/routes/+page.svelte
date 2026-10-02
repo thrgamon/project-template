@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ApiError, api, type User } from '$lib/api';
+import { ApiError, api, type User } from '#lib/api.js';
 
 let user = $state<User | null>(null);
 let ready = $state(false);

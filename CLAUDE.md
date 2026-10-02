@@ -14,7 +14,7 @@
 
 ## Architecture
 - Go backend: cmd/server/ + internal/ (Gin, pgx, sqlc)
-- SvelteKit frontend: frontend/ (adapter-static, Vite)
+- SvelteKit 3 frontend: frontend/ (adapter-static, Vite 8, TypeScript 6)
 - PostgreSQL with sqlc for type-safe queries
 - Production is static-first: Go serves frontend/build and `/api` from one origin
 - SSR is an explicit exception: document the need, use adapter-node, and add end-to-end coverage before introducing a Node runtime
@@ -38,6 +38,7 @@
 - Run `just sync` after changing migrations/ or queries/
 - Always create migrations with `just migrate-create <name>` (generates unique version). Never hand-create migration files.
 - Use semantic selectors in e2e tests (getByRole, getByText)
+- Import from frontend/src/lib with the `#lib/` alias and an explicit extension (`#lib/api.js`); SvelteKit 3 has no `$lib` and no svelte.config.js (config lives in vite.config.ts)
 - Frontend calls the API through frontend/src/lib/api.ts; do not scatter fetch calls through routes
 - Use yarn for package management, never npm (`npx` is fine for one-off tools like shadcn)
 

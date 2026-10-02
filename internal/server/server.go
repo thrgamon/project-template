@@ -94,12 +94,27 @@ func registerStaticFiles(router *gin.Engine, staticDir string) {
 		panic(fmt.Sprintf("static frontend directory %q is unavailable: %v", staticDir, err))
 	}
 
-	files := http.FileServer(http.Dir(staticDir))
+	root := http.Dir(staticDir)
+	files := http.FileServer(root)
 	router.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api/") {
 			c.Status(http.StatusNotFound)
 			return
 		}
+		// adapter-static writes /dashboard as dashboard.html, which
+		// http.FileServer does not resolve on a reload or direct link.
+		if page := c.Request.URL.Path + ".html"; !exists(root, c.Request.URL.Path) && exists(root, page) {
+			c.Request.URL.Path = page
+		}
 		files.ServeHTTP(c.Writer, c.Request)
 	})
+}
+
+func exists(root http.FileSystem, name string) bool {
+	f, err := root.Open(name)
+	if err != nil {
+		return false
+	}
+	_ = f.Close()
+	return true
 }

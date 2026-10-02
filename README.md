@@ -7,7 +7,7 @@ in production.
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev/) (manages Go, Node versions and env vars)
+- [mise](https://mise.jdx.dev/) (manages Go 1.27, Node 24 and env vars)
 - [Docker](https://www.docker.com/) (local dev environment)
 - [just](https://just.systems/) (task runner)
 - [yarn](https://classic.yarnpkg.com/) (Node package manager)
@@ -57,7 +57,7 @@ queries/             # sqlc SQL query files
 frontend/            # SvelteKit static frontend
   src/routes/        # Pages (login, dashboard)
   src/lib/api.ts     # Handwritten browser DTOs and API client
-  svelte.config.js   # adapter-static configuration
+  vite.config.ts     # SvelteKit options (adapter-static) and dev proxy
 e2e/                 # Playwright end-to-end tests
 monitoring/          # Grafana, Prometheus, Loki, Tempo configs
 deploy/              # Dokku entrypoint script
