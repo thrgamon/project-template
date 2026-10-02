@@ -1,7 +1,7 @@
 # Pinned versions of the external tools the SQL codegen and migration steps need.
-# Keep these compatible with the Go 1.25 toolchain declared in go.mod.
-SQLC_VERSION := "v1.30.0"
-GOOSE_VERSION := "v3.26.0"
+# Keep these compatible with the Go 1.27 toolchain declared in go.mod.
+SQLC_VERSION := "v1.31.1"
+GOOSE_VERSION := "v3.28.0"
 
 default:
     @just --list
