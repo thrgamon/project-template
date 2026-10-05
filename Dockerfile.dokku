@@ -29,7 +29,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -trimpath -ldflags="-s -w" -o 
 # Stage 3: Production runtime
 FROM alpine:3.24
 
-RUN apk add --no-cache ca-certificates tzdata
+# Dokku runs app.json predeploy commands through /bin/bash when the image has
+# no ENTRYPOINT, and Alpine ships without it.
+RUN apk add --no-cache bash ca-certificates tzdata
 
 # Run as an unprivileged user. The app writes nothing at runtime.
 RUN addgroup -S -g 10001 app && adduser -S -G app -u 10001 app
