@@ -1,4 +1,5 @@
 FROM node:24-alpine
+RUN corepack enable
 WORKDIR /app/frontend
 EXPOSE 3000
-CMD ["sh", "-c", "yarn install && yarn run dev -- --host 0.0.0.0"]
+CMD ["sh", "-c", "pnpm install && pnpm run dev -- --host 0.0.0.0"]

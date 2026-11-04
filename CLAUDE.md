@@ -40,7 +40,7 @@
 - Use semantic selectors in e2e tests (getByRole, getByText)
 - Import from frontend/src/lib with the `#lib/` alias and an explicit extension (`#lib/api.js`); SvelteKit 3 has no `$lib` and no svelte.config.js (config lives in vite.config.ts)
 - Frontend calls the API through frontend/src/lib/api.ts; do not scatter fetch calls through routes
-- Use yarn for package management, never npm (`npx` is fine for one-off tools like shadcn)
+- Use pnpm for package management, never npm or yarn (`pnpm dlx` for one-off tools like shadcn). Dependency install scripts must be allowed under `allowBuilds` in `frontend/pnpm-workspace.yaml`
 
 ## Deployment
 - Dokku via Dockerfile.dokku (unified Go + static SvelteKit container)

@@ -5,7 +5,7 @@
 - [ ] Update Go module path in all `.go` files and `go.mod`
 - [ ] Start local services with `just dev`; it creates a gitignored `.worktree.env` with isolated database and port settings for this worktree
 - [ ] Update `CLAUDE.md` with project-specific guidelines
-- [ ] Run `cd frontend && yarn install` to generate `frontend/yarn.lock`
+- [ ] Run `cd frontend && pnpm install` to generate `frontend/pnpm-lock.yaml`
 - [ ] Run `just sync` to verify the codegen pipeline works end-to-end
 - [ ] Install Go 1.27 via mise if not already available (`mise install go@1.27`)
 

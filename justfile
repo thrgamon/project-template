@@ -35,7 +35,7 @@ backend:
 
 # Run frontend locally (outside docker)
 frontend:
-    ./scripts/worktree-env && . ./.worktree.env && cd frontend && yarn install && API_URL="http://localhost:${BACKEND_PORT}" yarn run dev -- --port "${FRONTEND_PORT}"
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && pnpm install && API_URL="http://localhost:${BACKEND_PORT}" pnpm run dev -- --port "${FRONTEND_PORT}"
 
 # Install git hooks
 install-hooks:
@@ -50,7 +50,7 @@ sqlc:
 
 # Full sync: sqlc + frontend type check
 sync: sqlc
-    cd frontend && yarn run check
+    cd frontend && pnpm run check
     go vet ./...
 
 # --- Quality ---
@@ -70,30 +70,30 @@ fmt:
 
 # Frontend lint
 fe-lint:
-    cd frontend && yarn run lint
+    cd frontend && pnpm run lint
 
 # Frontend lint with auto-fix
 fe-lint-fix:
-    cd frontend && yarn run lint:fix
+    cd frontend && pnpm run lint:fix
 
 # Frontend format
 fe-fmt:
-    cd frontend && yarn run format
+    cd frontend && pnpm run format
 
 # Run all checks (lint + test + type-check)
 check: lint test
-    cd frontend && yarn run check
-    cd frontend && yarn run lint
+    cd frontend && pnpm run check
+    cd frontend && pnpm run lint
 
 # --- E2E Tests ---
 
 # Run Playwright e2e tests against this worktree's frontend service
 e2e:
-    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --config=../playwright.config.ts
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" pnpm exec playwright test --config=../playwright.config.ts
 
 # Run Playwright with UI mode
 e2e-ui:
-    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" yarn playwright test --config=../playwright.config.ts --ui
+    ./scripts/worktree-env && . ./.worktree.env && cd frontend && BASE_URL="http://localhost:${FRONTEND_PORT}" pnpm exec playwright test --config=../playwright.config.ts --ui
 
 # --- Database ---
 

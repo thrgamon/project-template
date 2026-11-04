@@ -10,7 +10,7 @@ in production.
 - [mise](https://mise.jdx.dev/) (manages Go 1.27, Node 24 and env vars)
 - [Docker](https://www.docker.com/) (local dev environment)
 - [just](https://just.systems/) (task runner)
-- [yarn](https://classic.yarnpkg.com/) (Node package manager)
+- [pnpm](https://pnpm.io/) (Node package manager, installed via mise)
 
 Run `just install-tools` to install the pinned versions of sqlc and goose.
 
